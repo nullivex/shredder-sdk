@@ -2,7 +2,7 @@
   "author": "ESITED LLC <developers@esited.com>",
   "name": "shredder-sdk",
   "description": "A mock shredder cluster that can be used for testing.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "http://www.shredder.io/",
   "repository": {
     "type": "git",

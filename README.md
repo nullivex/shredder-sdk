@@ -75,5 +75,8 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.0.1
+* Use PEM for SSL rather than cert/key
+
 ### 1.0.0
 * Initial Release

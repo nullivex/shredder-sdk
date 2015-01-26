@@ -11,8 +11,10 @@ var pkg = require('../package.json')
 var sslOptions = {
   keyFile: __dirname + '/../ssl/shredder_test.key',
   certFile: __dirname + '/../ssl/shredder_test.crt',
+  pemFile: __dirname + '/../ssl/shredder_test.pem',
   key: fs.readFileSync(__dirname + '/../ssl/shredder_test.key'),
-  cert: fs.readFileSync(__dirname + '/../ssl/shredder_test.crt')
+  cert: fs.readFileSync(__dirname + '/../ssl/shredder_test.crt'),
+  pem: fs.readFileSync(__dirname + '/../ssl/shredder_test.pem')
 }
 var server = https.createServer(
   {
