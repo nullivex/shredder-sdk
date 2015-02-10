@@ -75,6 +75,9 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.1
+* Fix recursion bug on api config update
+
 ### 1.1.0
 * Upgraded to match new OOSE standards
 * Upgraded to `oose-sdk` 1.1.0

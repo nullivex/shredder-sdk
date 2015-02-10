@@ -33,6 +33,13 @@ module.exports = api
 
 
 /**
+ * Parent config update
+ * @type {Function}
+ */
+api.parentUpdateConfig = api.updateConfig
+
+
+/**
  * Update API Config
  * @param {object} update
  */
@@ -42,7 +49,7 @@ api.updateConfig = function(update){
   cfg.$load(update)
   config = cfg.$strip()
   pool.maxSockets = config.maxSockets
-  api.updateConfig(config)
+  api.parentUpdateConfig(config)
 }
 
 
