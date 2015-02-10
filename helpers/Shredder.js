@@ -364,6 +364,47 @@ Shredder.prototype.jobAbort = function(handle){
 
 
 /**
+ * Check if job content exists
+ * @param {string} handle
+ * @param {string} file
+ * @return {P}
+ */
+Shredder.prototype.contentExists = function(handle,file){
+  var that = this
+  var client = {}
+  return that.prepare()
+    .then(function(result){
+      client = result
+      return client.postAsync({
+        url: client.url('/job/content/exists'),
+        json: {
+          handle: handle,
+          file: file
+        }
+      })
+    })
+    .spread(that.api.validateResponse())
+    .spread(function(res,body){
+      return !!body.exists
+    })
+    .catch(that.handleNetworkError)
+}
+
+
+/**
+ * URL to download job content
+ * @param {string} handle
+ * @param {string} file
+ * @return {string}
+ */
+Shredder.prototype.contentUrl = function(handle,file){
+  var that = this
+  return 'http://' + that.opts.master.host + ':' + that.opts.master.port +
+    '/job/content/download/' + handle + '/' + file
+}
+
+
+/**
  * Export Shredder
  * @type {Shredder}
  */

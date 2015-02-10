@@ -162,6 +162,15 @@ app.post('/job/abort',validateSession,function(req,res){
   jobAbort.status = 'queued_abort'
   res.json(jobAbort)
 })
+app.post('/job/content/exists',validateSession,function(req,res){
+  res.json({
+    exists: false
+  })
+})
+app.get('/job/content/download/:handle/:file',function(req,res){
+  res.type('text/plain')
+  res.send('foo\n')
+})
 
 
 /**

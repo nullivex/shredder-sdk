@@ -75,6 +75,10 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.2
+* Added contentExists functionality
+* Added contentUrl helper
+
 ### 1.1.1
 * Fix recursion bug on api config update
 
