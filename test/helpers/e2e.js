@@ -78,12 +78,12 @@ exports.checkDown = function(type,server){
 
 /**
  * Check if public routes work on a prism
- * @param {object} prism
+ * @param {object} master
  * @return {Function}
  */
-exports.checkPublic = function(prism){
+exports.checkPublic = function(master){
   return function(){
-    var client = api.prism(prism.prism)
+    var client = api.prism(master.master)
     return client
       .postAsync(client.url('/'))
       .spread(client.validateResponse())
@@ -111,12 +111,12 @@ exports.checkPublic = function(prism){
 
 /**
  * Check if protected routes require authentication on a prism
- * @param {object} prism
+ * @param {object} master
  * @return {Function}
  */
-exports.checkProtected = function(prism){
+exports.checkProtected = function(master){
   return function(){
-    var client = api.prism(prism.prism)
+    var client = api.prism(master.master)
     return client.postAsync(client.url('/user/logout'))
       .catch(UserError,function(err){
         expect(err.message).to.match(/Invalid response code \(401\) to POST/)
@@ -124,7 +124,7 @@ exports.checkProtected = function(prism){
       })
       .catch(UserError,function(err){
         expect(err.message).to.match(/Invalid response code \(401\) to POST/)
-        return client.postAsync(client.url('/user/session/validate'))
+        return client.postAsync(client.url('/user/session/renew'))
       })
       .catch(UserError,function(err){
         expect(err.message).to.match(/Invalid response code \(401\) to POST/)
@@ -204,3 +204,169 @@ exports.masterLogout = function(master,session){
   }
 }
 
+
+/**
+ * Job create
+ * @param {object} master
+ * @return {Function}
+ */
+exports.jobCreate = function(master){
+  return function(){
+    var client = api.setSession(exports.user.session,api.master(master.master))
+    return client.postAsync({
+      url: client.url('/job/create'),
+      localAddress: '127.0.0.1',
+      json: {
+        category: mock.job.category,
+        description: mock.job.description,
+        priority: mock.job.priority
+      }
+    })
+      .spread(function(res,body){
+        expect(body.handle).to.equal(mock.job.handle)
+        expect(body.priority).to.equal(mock.job.priority)
+        expect(body.category).to.equal(mock.job.category)
+      })
+  }
+}
+
+
+/**
+ * Job detail
+ * @param {object} master
+ * @return {Function}
+ */
+exports.jobDetail = function(master){
+  return function(){
+    var client = api.setSession(exports.user.session,api.master(master.master))
+    return client.postAsync({
+      url: client.url('/job/detail'),
+      localAddress: '127.0.0.1',
+      json: {
+        handle: mock.job.handle
+      }
+    })
+      .spread(function(res,body){
+        expect(body.handle).to.equal(mock.job.handle)
+        expect(body.priority).to.equal(mock.job.priority)
+        expect(body.category).to.equal(mock.job.category)
+        expect(body.status).to.equal(mock.job.status)
+      })
+  }
+}
+
+
+/**
+ * Job update
+ * @param {object} master
+ * @return {Function}
+ */
+exports.jobUpdate = function(master){
+  return function(){
+    var client = api.setSession(exports.user.session,api.master(master.master))
+    return client.postAsync({
+      url: client.url('/job/update'),
+      localAddress: '127.0.0.1',
+      json: {
+        handle: mock.job.handle,
+        priority: 5
+      }
+    })
+      .spread(function(res,body){
+        expect(body.handle).to.equal(mock.job.handle)
+        expect(body.priority).to.equal(5)
+      })
+  }
+}
+
+
+/**
+ * Job remove
+ * @param {object} master
+ * @return {Function}
+ */
+exports.jobRemove = function(master){
+  return function(){
+    var client = api.setSession(exports.user.session,api.master(master.master))
+    return client.postAsync({
+      url: client.url('/job/remove'),
+      localAddress: '127.0.0.1',
+      json: {
+        handle: mock.job.handle
+      }
+    })
+      .spread(function(res,body){
+        expect(body.success).to.equal('Job removed')
+        expect(body.count).to.equal(1)
+      })
+  }
+}
+
+
+/**
+ * Job Start
+ * @param {object} master
+ * @return {Function}
+ */
+exports.jobStart = function(master){
+  return function(){
+    var client = api.setSession(exports.user.session,api.master(master.master))
+    return client.postAsync({
+      url: client.url('/job/start'),
+      localAddress: '127.0.0.1',
+      json: {
+        handle: mock.job.handle
+      }
+    })
+      .spread(function(res,body){
+        expect(body.handle).to.equal(mock.job.handle)
+        expect(body.status).to.equal('queued')
+      })
+  }
+}
+
+
+/**
+ * Job Retru
+ * @param {object} master
+ * @return {Function}
+ */
+exports.jobRetry = function(master){
+  return function(){
+    var client = api.setSession(exports.user.session,api.master(master.master))
+    return client.postAsync({
+      url: client.url('/job/retry'),
+      localAddress: '127.0.0.1',
+      json: {
+        handle: mock.job.handle
+      }
+    })
+      .spread(function(res,body){
+        expect(body.handle).to.equal(mock.job.handle)
+        expect(body.status).to.equal('queued_retry')
+      })
+  }
+}
+
+
+/**
+ * Job Abort
+ * @param {object} master
+ * @return {Function}
+ */
+exports.jobAbort = function(master){
+  return function(){
+    var client = api.setSession(exports.user.session,api.master(master.master))
+    return client.postAsync({
+      url: client.url('/job/abort'),
+      localAddress: '127.0.0.1',
+      json: {
+        handle: mock.job.handle
+      }
+    })
+      .spread(function(res,body){
+        expect(body.handle).to.equal(mock.job.handle)
+        expect(body.status).to.equal('queued_abort')
+      })
+  }
+}

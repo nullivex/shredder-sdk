@@ -17,6 +17,20 @@ exports.mock = require('./mock')
 
 
 /**
+ * Shredder helper
+ * @type {object}
+ */
+exports.Shredder = require('./helpers/Shredder')
+
+
+/**
+ * Max Concurrency Error
+ * @type {NetworkError}
+ */
+exports.MaxConcurrencyError = require('./helpers/MaxConcurrencyError')
+
+
+/**
  * Network Error
  * @type {NetworkError}
  */

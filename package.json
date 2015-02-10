@@ -2,7 +2,7 @@
   "author": "ESITED LLC <developers@esited.com>",
   "name": "shredder-sdk",
   "description": "A mock shredder cluster that can be used for testing.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "homepage": "http://www.shredder.io/",
   "repository": {
     "type": "git",
@@ -20,12 +20,9 @@
     "body-parser": "^1.9.2",
     "debug": "^2.1.1",
     "express": "^4.10.2",
-    "graceful-fs": "^3.0.5",
     "oose-sdk": "^1.1.2",
     "object-manage": "^0.8.0",
-    "random-js": "^1.0.4",
-    "request": "^2.48.0",
-    "temp": "^0.8.1"
+    "request": "^2.48.0"
   },
   "scripts": {
     "start": "node app",
@@ -33,7 +30,6 @@
   },
   "devDependencies": {
     "chai": "1.10.x",
-    "mocha": "2.0.x",
-    "request": "^2.48.0"
+    "mocha": "2.0.x"
   }
 }

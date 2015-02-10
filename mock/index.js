@@ -7,6 +7,7 @@ var https = require('https')
 var oose = require('oose-sdk')
 
 var app = express()
+var job = require('./helpers/job')
 var pkg = require('../package.json')
 var sslOptions = {
   keyFile: __dirname + '/../ssl/shredder_test.key',
@@ -40,7 +41,7 @@ app.use(bodyParser.json())
 
 //home page
 app.post('/',function(req,res){
-  res.json({message: 'Welcome to OOSE Mock version ' + pkg.version})
+  res.json({message: 'Welcome to Shredder Mock version ' + pkg.version})
 })
 
 //health test
@@ -52,7 +53,7 @@ app.post('/ping',function(req,res){
 //protected routes
 //--------------------
 var validateSession = function(req,res,next){
-  var token = req.get('X-OOSE-Token')
+  var token = req.get('X-Shredder-Token')
   if(!token || user.session.token !== token){
     res.status(401)
     res.json({error: 'Invalid session'})
@@ -88,13 +89,78 @@ app.post('/user/password/reset',validateSession,function(req,res){
     password: user.password
   })
 })
-app.post('/user/session/validate',validateSession,function(req,res){
-  res.json({success: 'Session Valid'})
+app.post('/user/session/renew',validateSession,function(req,res){
+  var session = user.session
+  session.expires = new Date(req.body.expires)
+  res.json({
+    session: session
+  })
 })
-app.post('/user/session/update',validateSession,function(req,res){
-  if(req.body.data)
-    user.session.data = JSON.stringify(req.body.data)
-  res.json(user.session)
+
+//job functions
+app.post('/job/create',validateSession,function(req,res){
+  var data = req.body
+  res.json({
+    handle: job.handle,
+    description: data.description,
+    priority: data.priority,
+    category: data.category || 'resource',
+    UserId: job.UserId
+  })
+})
+app.post('/job/detail',validateSession,function(req,res){
+  res.json({
+    handle: job.handle,
+    description: job.description,
+    priority: job.priority,
+    category: job.category,
+    status: job.status,
+    statusDescription: job.statusDescription,
+    stepTotal: job.stepTotal,
+    stepComplete: job.stepComplete,
+    frameTotal: job.frameTotal,
+    frameComplete: job.frameComplete,
+    frameDescription: job.frameDescription,
+    UserId: job.UserId
+  })
+})
+app.post('/job/update',validateSession,function(req,res){
+  var data = req.body
+  res.json({
+    handle: data.handle || job.handle,
+    description: data.description || job.description,
+    priority: data.priority || job.priority,
+    category: data.category || job.category,
+    status: data.status || job.status,
+    statusDescription: data.statusDescription || job.statusDescription,
+    stepTotal: data.stepTotal || job.stepTotal,
+    stepComplete: data.stepComplete || job.stepComplete,
+    frameTotal: data.frameTotal || job.frameTotal,
+    frameComplete: data.frameComplete || job.frameComplete,
+    frameDescription: data.frameDescription || job.frameDescription,
+    UserId: data.UserId || job.UserId
+  })
+})
+app.post('/job/remove',validateSession,function(req,res){
+  res.json({
+    success: 'Job removed',
+    count: 1
+  })
+})
+app.post('/job/start',validateSession,function(req,res){
+  var jobStart = job
+  jobStart.status = 'queued'
+  res.json(jobStart)
+})
+app.post('/job/retry',validateSession,function(req,res){
+  var jobRetry = job
+  jobRetry.status = 'queued_retry'
+  res.json(jobRetry)
+})
+app.post('/job/abort',validateSession,function(req,res){
+  var jobAbort = job
+  jobAbort.status = 'queued_abort'
+  res.json(jobAbort)
 })
 
 
@@ -103,6 +169,13 @@ app.post('/user/session/update',validateSession,function(req,res){
  * @type {object}
  */
 exports.sslOptions = sslOptions
+
+
+/**
+ * Mock job
+ * @type {object}
+ */
+exports.job = job
 
 
 /**

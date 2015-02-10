@@ -75,6 +75,16 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.0
+* Upgraded to match new OOSE standards
+* Upgraded to `oose-sdk` 1.1.0
+* Abstracted `MaxConcurrencyError`
+* Added `Shredder` helper
+* Added `job` mock
+* Completed mock server
+* Completed mock testing
+* Added `Shredder` testing
+
 ### 1.0.1
 * Use PEM for SSL rather than cert/key
 

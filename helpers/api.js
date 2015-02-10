@@ -1,11 +1,8 @@
 'use strict';
-var P = require('bluebird')
+var ObjectManage = require('object-manage')
 var oose = require('oose-sdk')
 
-var NetworkError = oose.NetworkError
-var UserError = oose.UserError
-
-var cache = {}
+var api = oose.api
 
 var config = {
   maxSockets: 8,
@@ -23,20 +20,29 @@ var config = {
     password: 'shredder'
   }
 }
+api.updateConfig(config)
 
 var pool = {maxSockets: config.maxSockets}
+
+
+/**
+ * Export API
+ * @type {Object}
+ */
+module.exports = api
 
 
 /**
  * Update API Config
  * @param {object} update
  */
-exports.updateConfig = function(update){
+api.updateConfig = function(update){
   var cfg = new ObjectManage()
   cfg.$load(config)
   cfg.$load(update)
   config = cfg.$strip()
   pool.maxSockets = config.maxSockets
+  api.updateConfig(config)
 }
 
 
@@ -45,9 +51,9 @@ exports.updateConfig = function(update){
  * @param {object} options
  * @return {request}
  */
-exports.master = function(options){
+api.master = function(options){
   if(!options) options = config.master
-  return setupRequest('master',options)
+  return api.setupRequest('master',options)
 }
 
 
@@ -56,30 +62,7 @@ exports.master = function(options){
  * @param {object} options
  * @return {request}
  */
-exports.worker = function(options){
+api.worker = function(options){
   if(!options) options = config.worker
-  return setupRequest('worker',options)
-}
-
-
-/**
- * Set session on any request object
- * @param {object} session
- * @param {request} request
- * @return {request}
- */
-exports.setSession = function(session,request){
-  var cacheKey = request.options.type + ':' + request.options.host +
-    ':' + request.options.port + ':' + session.token
-  if(!cache[cacheKey]){
-    debug('cache miss',cacheKey)
-    var newOptions = {headers: {}}
-    newOptions.headers[config.sessionTokenName] = session.token
-    var req = request.defaults(newOptions)
-    req = extendRequest(req,request.options.type,request.options)
-    cache[cacheKey] = req
-  } else {
-    debug('cache hit',cacheKey)
-  }
-  return cache[cacheKey]
+  return api.setupRequest('worker',options)
 }
