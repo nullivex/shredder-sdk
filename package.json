@@ -20,8 +20,9 @@
     "body-parser": "^1.9.2",
     "debug": "^2.1.1",
     "express": "^4.10.2",
-    "oose-sdk": "^1.1.2",
+    "graceful-fs": "^3.0.5",
     "object-manage": "^0.8.0",
+    "oose-sdk": "^1.1.2",
     "request": "^2.48.0"
   },
   "scripts": {
