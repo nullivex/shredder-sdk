@@ -84,6 +84,7 @@ describe('my test',function(){
 * Completed mock server
 * Completed mock testing
 * Added `Shredder` testing
+* Added travis builds
 
 ### 1.0.1
 * Use PEM for SSL rather than cert/key
