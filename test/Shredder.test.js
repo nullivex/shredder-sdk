@@ -97,13 +97,13 @@ describe('Shredder',function(){
       })
   })
   it('should check if content exists',function(){
-    return shredder.contentExists(mock.job.handle,'video.mp4')
+    return shredder.jobContentExists(mock.job.handle,'video.mp4')
       .then(function(result){
         expect(result).to.equal(false)
       })
   })
   it('should generate a content download url',function(){
-    var url = shredder.contentUrl(mock.job.handle,'video.mp4')
+    var url = shredder.jobContentUrl(mock.job.handle,'video.mp4')
     expect(url).to.equal(
       'http://127.0.0.1:5980/job/content/download/' +
       mock.job.handle + '/video.mp4'

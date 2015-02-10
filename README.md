@@ -75,6 +75,10 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.3
+* Renamed `contentExists` to `jobContentExists`
+* Renamed `contentUrl` to `jobContentUrl`
+
 ### 1.1.2
 * Added contentExists functionality
 * Added contentUrl helper

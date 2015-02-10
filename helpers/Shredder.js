@@ -369,7 +369,7 @@ Shredder.prototype.jobAbort = function(handle){
  * @param {string} file
  * @return {P}
  */
-Shredder.prototype.contentExists = function(handle,file){
+Shredder.prototype.jobContentExists = function(handle,file){
   var that = this
   var client = {}
   return that.prepare()
@@ -397,7 +397,7 @@ Shredder.prototype.contentExists = function(handle,file){
  * @param {string} file
  * @return {string}
  */
-Shredder.prototype.contentUrl = function(handle,file){
+Shredder.prototype.jobContentUrl = function(handle,file){
   var that = this
   return 'http://' + that.opts.master.host + ':' + that.opts.master.port +
     '/job/content/download/' + handle + '/' + file
