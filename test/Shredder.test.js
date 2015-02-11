@@ -105,7 +105,7 @@ describe('Shredder',function(){
   it('should generate a content download url',function(){
     var url = shredder.jobContentUrl(mock.job.handle,'video.mp4')
     expect(url).to.equal(
-      'http://127.0.0.1:5980/job/content/download/' +
+      'https://127.0.0.1:5980/job/content/download/' +
       mock.job.handle + '/video.mp4'
     )
   })
