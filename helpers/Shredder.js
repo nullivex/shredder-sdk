@@ -399,7 +399,7 @@ Shredder.prototype.jobContentExists = function(handle,file){
  */
 Shredder.prototype.jobContentUrl = function(handle,file){
   var that = this
-  return 'http://' + that.opts.master.host + ':' + that.opts.master.port +
+  return 'https://' + that.opts.master.host + ':' + that.opts.master.port +
     '/job/content/download/' + handle + '/' + file
 }
 

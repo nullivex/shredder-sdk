@@ -75,6 +75,9 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.4
+* Fix error where jobContentUrl would give out an http:// URL instead of https
+
 ### 1.1.3
 * Renamed `contentExists` to `jobContentExists`
 * Renamed `contentUrl` to `jobContentUrl`
