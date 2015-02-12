@@ -75,6 +75,10 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.5
+* Upgrade to latest oose-sdk
+* Hard set token key name
+
 ### 1.1.4
 * Fix error where jobContentUrl would give out an http:// URL instead of https
 
