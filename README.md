@@ -75,6 +75,9 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.6
+* Drop session expiration they are now sticky
+
 ### 1.1.5
 * Upgrade to latest oose-sdk
 * Hard set token key name

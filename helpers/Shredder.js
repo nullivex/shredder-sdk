@@ -109,27 +109,12 @@ Shredder.prototype.prepare = function(request,session){
   if(!request) request = that.api
   if(!session) session = that.session
   var client = api.setSession(session,request,'X-Shredder-Token')
+  if(!that.isConnected()) throw new UserError('Not connected')
+  if(!that.isAuthenticated()) throw new UserError('Not authenticated')
   return P.try(function(){
-    if(!that.isConnected()) throw new UserError('Not connected')
-    if(!that.isAuthenticated()) throw new UserError('Not authenticated')
-    if((+new Date(that.session.expires)) > ((+new Date() + 300))){
-      return client
-    } else {
-      var expires = (+new Date()) + 360000 //add 1 hour
-      return client.postAsync({
-        url: client.url('/user/session/renew'),
-        json: {
-          expires: expires
-        }
-      })
-        .spread(client.validateResponse())
-        .spread(function(res,body){
-          that.session = session = body.session
-          return client
-        })
-        .catch(client.handleNetworkError)
-    }
+    return client
   })
+
 }
 
 
