@@ -78,7 +78,7 @@ describe('my test',function(){
 ### 1.1.7
 * Enable sticky session support.
 * Add helper for generating session keys.
-* Shredder login now takes username and password at call time `prism.login(un,pw)`
+* Shredder login now takes username and password at call time `shredder.login(un,pw)`
 
 ### 1.1.6
 * Drop session expiration they are now sticky
