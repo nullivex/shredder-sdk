@@ -20,8 +20,10 @@ program
  * @type {{host: string, port: string}}
  */
 var shredderConfig = {
-  host: program.host || null,
-  port: program.port || 5971
+  master: {
+    host: program.host || 'master.shredder.io',
+    port: program.port || 5980
+  }
 }
 
 //setup our prism handle

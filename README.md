@@ -75,6 +75,9 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.9
+* Fix to get the keygen tool actually working.
+
 ### 1.1.8
 * Fix to make sure keygen gets installed globally.
 
