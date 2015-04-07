@@ -2,7 +2,7 @@
   "author": "ESITED LLC <developers@esited.com>",
   "name": "shredder-sdk",
   "description": "Shredder development kit complete with mock server",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "homepage": "http://www.shredder.io/",
   "repository": {
     "type": "git",
@@ -24,6 +24,9 @@
     "object-manage": "^0.8.0",
     "oose-sdk": "^1.1.7",
     "request": "^2.55.0"
+  },
+  "bin": {
+    "shredder-keygen": "./bin/shredder-keygen"
   },
   "scripts": {
     "start": "node app",

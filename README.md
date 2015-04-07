@@ -75,6 +75,9 @@ describe('my test',function(){
 
 ## Changelog
 
+### 1.1.8
+* Fix to make sure keygen gets installed globally.
+
 ### 1.1.7
 * Enable sticky session support.
 * Add helper for generating session keys.
