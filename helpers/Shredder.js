@@ -55,6 +55,18 @@ Shredder.prototype.isAuthenticated = function(){
 
 
 /**
+ * Set the session statically
+ * @param {string} sessionToken
+ * @return {Prism}
+ */
+Shredder.prototype.setSession = function(sessionToken){
+  this.session = {token: sessionToken}
+  this.authenticated = true
+  return this
+}
+
+
+/**
  * Select a prism and prepare for connection
  * @param {string} host
  * @param {number} port
@@ -75,15 +87,17 @@ Shredder.prototype.connect = function(host,port){
 
 /**
  * Authenticate the session
+ * @param {string} username
+ * @param {string} password
  * @return {P}
  */
-Shredder.prototype.login = function(){
+Shredder.prototype.login = function(username,password){
   var that = this
   return that.api.postAsync({
     url: that.api.url('/user/login'),
     json: {
-      username: that.opts.username,
-      password: that.opts.password
+      username: username || that.opts.username,
+      password: password || that.opts.password
     }
   })
     .spread(that.api.validateResponse())

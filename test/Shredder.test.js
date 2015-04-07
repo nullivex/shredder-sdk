@@ -4,6 +4,9 @@ var expect = require('chai').expect
 var mock = require('../mock')
 var Shredder = require('../helpers/Shredder')
 
+//prevent bad cert errors during testing
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 var mockConfig = {
   master: {
     port: 5980,
@@ -108,5 +111,15 @@ describe('Shredder',function(){
       'https://127.0.0.1:5980/job/content/download/' +
       mock.job.handle + '/video.mp4'
     )
+  })
+  it('should connect with a session key',function(){
+    var shredder = new Shredder().setSession(mock.user.session.token)
+    return shredder.connect(mockConfig.master.host,mockConfig.master.port)
+      .then(function(){
+        return shredder.jobContentExists(mock.job.handle,'video.mp4')
+      })
+      .then(function(result){
+        expect(result).to.equal(false)
+      })
   })
 })
