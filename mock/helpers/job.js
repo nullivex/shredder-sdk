@@ -23,7 +23,7 @@ var jobDescription = {
  */
 module.exports = {
   handle: '46QBCxtvJs3A',
-  description: JSON.stringify(jobDescription),
+  description: jobDescription,
   descriptionRaw: jobDescription,
   priority: 10,
   category: 'resource',

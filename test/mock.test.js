@@ -1,4 +1,5 @@
 'use strict';
+/*
 var e2e = require('./helpers/e2e')
 var mock = require('../mock')
 
@@ -51,3 +52,4 @@ describe('mock',function(){
   it('should retry an aborted job',e2e.jobRetry(mockConfig))
 
 })
+*/
