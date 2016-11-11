@@ -84,10 +84,8 @@ Shredder.prototype.setSession = function(sessionToken){
 Shredder.prototype.connect = function(host,port){
   var that = this
   return P.try(function(){
-    if(host) that.opts.master.host = host
-    if(port) that.opts.master.port = port
     that.connected = true
-    that.api = api.master(that.opts.master)
+    //that.api = api.master(that.opts.master)
     return host
   })
 
@@ -104,11 +102,12 @@ Shredder.prototype.login = function(username,password){
   var that = this
   var client = that.client = cradle(that.opts)
   job.setClient(client)
-  return client.info().then(function(info){
+  return client.uuidsAsync().then(function(info){
     that.authenticated = true
     that.connected = true
     return true
   },function(err){
+    console.log(err)
     throw new UserError('Connection failed')
   })
   .catch(that.api.handleNetworkError)
@@ -146,7 +145,7 @@ Shredder.prototype.logout = function(){
  */
 Shredder.prototype.passwordReset = function(){
   return new P(function(resolve,reject){
-    resolve(true)
+    resolve({password:'Reset'})
   })
 }
 
@@ -215,6 +214,8 @@ Shredder.prototype.jobRemove = function(handle){
     }else{
       return job.remove(retrievedJob)
     }
+  }).then(function(){
+    return({success: 'Job removed', count: 1})
   })
 }
 

@@ -2,9 +2,6 @@
 var P = require('bluebird')
 var cradle = require('cradle')
 
-var CouchSchema = require('./couch/CouchSchema')
-
-var config = require('../config')
 var client = null
 //make some promises
 P.promisifyAll(cradle)
@@ -19,9 +16,9 @@ module.exports = function(config){
   if(client) return client;
 
   client = new (cradle.Connection)(
-    config.couchdb.host,
-    config.couchdb.port,
-    config.couchdb.options
+    config.host,
+    config.port,
+    config.options
   )
 
   //make some promises
@@ -32,14 +29,7 @@ module.exports = function(config){
    * Setup the DB access
    * @type {object}
    */
-  client.db = P.promisifyAll(client.database(config.couchdb.database))
-
-
-  /**
-   * Add schema to helper
-   * @type {CouchShema}
-   */
-  client.schema = new CouchSchema(config.couchdb.prefix)
+  client.db = P.promisifyAll(client.database(config.database))
 
   return client
 }
