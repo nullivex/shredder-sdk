@@ -33,6 +33,7 @@ describe('Shredder',function(){
   })
   //remove user and stop services
   after(function(){
+    couchInstance.close()
     return shredder.logout()
   })
   it('should reset the password',function(){
