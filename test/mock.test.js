@@ -23,7 +23,7 @@ describe('mock',function(){
     return mock.stop()
   })
 
-  it('should reset the password',function(){
+  it('should start up',function(){
     return shredder.login()
       .then(function(result){
         expect(result).to.be.true;
