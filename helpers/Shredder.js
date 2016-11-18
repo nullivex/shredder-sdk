@@ -8,6 +8,7 @@ var api = require('./api')
 var UserError = oose.UserError
 var cradle = require('./couchdb')
 var job = require('./job')
+var worker = require('./worker')
 //make some promises
 P.promisifyAll(dns)
 
@@ -102,6 +103,7 @@ Shredder.prototype.login = function(username,password){
   var that = this
   var client = that.client = cradle(that.opts)
   job.setClient(client)
+  worker.setClient(client)
   return client.uuidsAsync().then(function(info){
     that.authenticated = true
     that.connected = true
@@ -286,6 +288,11 @@ Shredder.prototype.jobAbort = function(handle){
  * @return {P}
  */
 Shredder.prototype.jobContentExists = function(handle,file){
+  return job.getByHandle(handle).then(function(retrievedJob){
+    if(retrievedJob.worker) return worker.get(retrievedJob.worker)
+    else throw new Error("No worker assigned to this job")
+  })
+  /*
   var that = this
   var client = {}
   return that.prepare()
@@ -303,7 +310,7 @@ Shredder.prototype.jobContentExists = function(handle,file){
     .spread(function(res,body){
       return !!body.exists
     })
-    .catch(that.handleNetworkError)
+    .catch(that.handleNetworkError)*/
 }
 
 

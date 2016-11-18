@@ -15,6 +15,13 @@ var mockConfig = {
   database: 'shredder'
 }
 
+var mockWorker = {
+  port: 5981,
+  host: '127.0.0.1',
+  database: 'shredder',
+  name:'fake'
+}
+
 describe('Shredder',function(){
   var shredder = {}
   var couchInstance = {}
@@ -26,6 +33,27 @@ describe('Shredder',function(){
     couchInstance = mockCouch.createServer()
     couchInstance.listen(mockConfig.port)
     couchInstance.addDB(mockConfig.database,[])
+    couchInstance.addDoc(mockConfig.database,{
+      _id:'_design/workers',
+      views:{
+        "all": {
+          "map": function(doc) { if(doc.type == 'worker') emit(doc.name, doc) }
+        },
+        "available": {
+          "map": function(doc) { if(doc.type == 'worker' && doc.available) emit(doc.name, doc) }
+        }
+      }
+    })
+    couchInstance.addDoc(mockConfig.database,{
+      _id:'shredder:worker:'+mockWorker.name,
+      active:true,
+      available:true,
+      host:mockWorker.host,
+      name:mockWorker.name,
+      port:mockWorker.port,
+      type:'worker',
+      writable:true
+    })
     shredder = new Shredder(mockConfig)
     return shredder.connect(mockConfig.host,mockConfig.port).then(function(){
       return shredder.login()
@@ -100,13 +128,15 @@ describe('Shredder',function(){
         expect(result.count).to.equal(1)
       })
   })
-  /*
+/*
   it('should check if content exists',function(){
-    return shredder.jobContentExists(mock.job.handle,'video.mp4')
+    couchInstance.databases[mockConfig.database][handle].worker = mockWorker.name
+    return shredder.jobContentExists(handle,'video.mp4')
       .then(function(result){
         expect(result).to.equal(false)
       })
   })
+
   it('should generate a content download url',function(){
     var url = shredder.jobContentUrl(mock.job.handle,'video.mp4')
     expect(url).to.equal(
