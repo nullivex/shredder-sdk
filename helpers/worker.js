@@ -2,13 +2,29 @@
 var P = require('bluebird')
 var cradle
 var api = require('./api')
-var sessionToken = null
+var sessionToken = null  //We only need one for all the workers
+var sessionTokenName = ''
+var cache = {}
+var username = ''
+var password = ''
 
 exports.setClient = function(client){
   cradle = client
 }
 
-var get = exports.get = function(name){
+exports.setSessionTokenName = function(name){
+  sessionTokenName = name
+}
+
+exports.setUsername = function(uname){
+  username=uname
+}
+
+exports.setPassword = function(pwd){
+  password=pwd
+}
+
+var getConfig = function(name){
   return cradle.db.viewAsync('workers/all',{key:name})
     .then(function(jobRes){
       if(jobRes && jobRes.length){
@@ -34,4 +50,88 @@ var getAvailable = exports.getAvailable = function(){
     },function(err){
       throw err
     })
+}
+
+var get = exports.get = function(name){
+  if(cache[name]) return cache[name]
+  return getConfig(name).then(function(workerCfg){
+    if(!workerCfg) return null
+
+  })
+}
+
+function construct(config){
+  var that = this
+  var request = api.worker(config)
+
+  that.request = request
+  that.contentExist = function(handle,file){
+    return request.postAsync({
+      url: request.url('/job/content/exists'),
+      json: {
+        handle: handle,
+        file: file
+      }
+    }).spread(function(res,body){
+      return !!body.exists
+    })
+  }
+
+  that.contentDownload = function(file){
+    return request.postAsync({
+      url: request.url('/user/login'),
+      json: {
+        username: username,
+        password: password
+      }
+    })
+  }
+
+  if(sessionToken){
+    api.setSession(sessionToken,request,sessionTokenName)
+    return that
+  }else{
+    return login(that).then(function(){
+      api.setSession(sessionToken,request,sessionTokenName)
+      return that
+    })
+  }
+}
+
+/**
+ * Authenticate the session
+ * @param {string} username
+ * @param {string} password
+ * @return {P}
+ */
+function login (worker){
+  return worker.request.postAsync({
+    url: worker.request.url('/user/login'),
+    json: {
+      username: username,
+      password: password
+    }
+  })
+  .spread(function(res,body){
+    if(!body.session)
+      throw new UserError('Login failed, no session')
+    sessionToken = body.session
+    return sessionToken
+  })
+}
+
+
+/**
+ * Set session on any request object
+ * @param {object} session
+ * @param {request} request
+ * @param {string} tokenName
+ * @return {request}
+ */
+var setSession = function(session,request,tokenName){
+  var newOptions = {headers: {}}
+  newOptions.headers[tokenName || config.sessionTokenName] = session.token
+  var req = request.defaults(newOptions)
+  req = extendRequest(req,request.options.type,request.options)
+  return req
 }

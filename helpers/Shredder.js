@@ -26,16 +26,17 @@ var Shredder = function(opts){
       port: '5984',
       prefix: 'shredder',
       database: 'shredder',
+      sessionToken:'X-SHREDDER-Token',
       options: {
-      secure: false,
+        secure: false,
         cache: false,
         retries: 3,
         retryTimeout: 10000,
         auth: {
-        username: 'shredder',
+          username: 'shredder',
           password: ''
+        }
       }
-    }
   })
   this.opts.$load(opts)
   //set properties
@@ -102,8 +103,13 @@ Shredder.prototype.connect = function(host,port){
 Shredder.prototype.login = function(username,password){
   var that = this
   var client = that.client = cradle(that.opts)
+  
   job.setClient(client)
   worker.setClient(client)
+  worker.setSessionTokenName(that.opts.sessionToken)
+  worker.setUsername(that.opts.options.auth.username)
+  worker.setPassword(that.opts.options.auth.password)
+
   return client.uuidsAsync().then(function(info){
     that.authenticated = true
     that.connected = true
@@ -291,6 +297,8 @@ Shredder.prototype.jobContentExists = function(handle,file){
   return job.getByHandle(handle).then(function(retrievedJob){
     if(retrievedJob.worker) return worker.get(retrievedJob.worker)
     else throw new Error("No worker assigned to this job")
+  }).then(function(worker){
+    console.log(worker)
   })
   /*
   var that = this

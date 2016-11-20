@@ -2,9 +2,24 @@
 var expect = require('chai').expect
 var mock = require('../mock')
 var Shredder = require('../helpers/Shredder')
-var mockConfig = {
+
+var shredderConfig = {
   port: 5980,
   host: '127.0.0.1'
+}
+
+var mockConfig = {
+  server :{
+    port: 5980,
+    host: '127.0.0.1',
+    database: 'shredder'
+  },
+   worker:{
+    port: 5981,
+    host: '127.0.0.1',
+    database: 'shredder',
+    name:'fake'
+  }
 }
 
 describe('mock',function(){
@@ -13,9 +28,9 @@ describe('mock',function(){
   this.timeout(3000)
   //start servers and create a user
   before(function(){
-    shredder = new Shredder(mockConfig)
-    return mock.start(mockConfig.port,mockConfig.host).then(function(){
-      return shredder.connect(mockConfig.host,mockConfig.port)
+    shredder = new Shredder(shredderConfig)
+    return mock.start(mockConfig).then(function(){
+      return shredder.connect(shredderConfig.host,shredderConfig.port)
     })
   })
   //remove user and stop services

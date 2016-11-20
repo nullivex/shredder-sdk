@@ -4,7 +4,7 @@ var expect = require('chai').expect
 //var mock = require('../mock')
 var mockJob = require('../mock/helpers/job')
 var Shredder = require('../helpers/Shredder')
-var mockCouch = require('mock-couch');
+var mock = require('../mock');
 
 //prevent bad cert errors during testing
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
@@ -15,11 +15,18 @@ var mockConfig = {
   database: 'shredder'
 }
 
-var mockWorker = {
-  port: 5981,
-  host: '127.0.0.1',
-  database: 'shredder',
-  name:'fake'
+var mockShredderConfig = {
+  server :{
+    port: 5980,
+    host: '127.0.0.1',
+    database: 'shredder'
+  },
+   worker:{
+    port: 5981,
+    host: '127.0.0.1',
+    database: 'shredder',
+    name:'fake'
+  }
 }
 
 describe('Shredder',function(){
@@ -30,39 +37,19 @@ describe('Shredder',function(){
   this.timeout(3000)
   //start servers and create a user
   before(function(){
-    couchInstance = mockCouch.createServer()
-    couchInstance.listen(mockConfig.port)
-    couchInstance.addDB(mockConfig.database,[])
-    couchInstance.addDoc(mockConfig.database,{
-      _id:'_design/workers',
-      views:{
-        "all": {
-          "map": function(doc) { if(doc.type == 'worker') emit(doc.name, doc) }
-        },
-        "available": {
-          "map": function(doc) { if(doc.type == 'worker' && doc.available) emit(doc.name, doc) }
-        }
-      }
-    })
-    couchInstance.addDoc(mockConfig.database,{
-      _id:'shredder:worker:'+mockWorker.name,
-      active:true,
-      available:true,
-      host:mockWorker.host,
-      name:mockWorker.name,
-      port:mockWorker.port,
-      type:'worker',
-      writable:true
-    })
     shredder = new Shredder(mockConfig)
-    return shredder.connect(mockConfig.host,mockConfig.port).then(function(){
+    return mock.start(mockShredderConfig).then(function(cInstance){
+      couchInstance=cInstance
+      return shredder.connect(mockConfig.host,mockConfig.port)
+    }).then(function(){
       return shredder.login()
     })
   })
   //remove user and stop services
   after(function(){
-    couchInstance.close()
-    return shredder.logout()
+    return mock.stop().then(function(){
+      return shredder.logout()
+    })   
   })
   it('should reset the password',function(){
     return shredder.passwordReset()
@@ -136,6 +123,7 @@ describe('Shredder',function(){
         expect(result).to.equal(false)
       })
   })
+
 
   it('should generate a content download url',function(){
     var url = shredder.jobContentUrl(mock.job.handle,'video.mp4')
