@@ -1,7 +1,20 @@
 'use strict';
 var mockCouch = require('mock-couch');
+var mockWorker = require('./helpers/worker')
 var P = require('bluebird')
 var couchInstance
+
+var sslOptions = {
+    keyFile: __dirname + '/../ssl/shredder_test.key',
+    certFile: __dirname + '/../ssl/shredder_test.crt',
+    pemFile: __dirname + '/../ssl/shredder_test.pem'
+}
+
+/**
+ * Mock SSL certificate
+ * @type {object}
+ */
+exports.sslOptions = sslOptions
 
 
 /**
@@ -11,7 +24,7 @@ var couchInstance
  * @return {P}
  */
 exports.start = function(config){
-  return new P(function(resolve,reject){
+  return mockWorker.start(config).then(function(){
     couchInstance = mockCouch.createServer()
     couchInstance.listen(config.server.port)
     couchInstance.addDB(config.server.database,[])
@@ -36,8 +49,7 @@ exports.start = function(config){
       type:'worker',
       writable:true
     })
-
-    resolve(couchInstance)
+    return couchInstance
   })
 }
 
@@ -49,6 +61,7 @@ exports.start = function(config){
 exports.stop = function(){
    return new P(function(resolve,reject){
     couchInstance.close()
+    mockWorker.stop()
     resolve(true)
   })
 }

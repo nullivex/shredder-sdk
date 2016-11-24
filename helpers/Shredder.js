@@ -298,27 +298,8 @@ Shredder.prototype.jobContentExists = function(handle,file){
     if(retrievedJob.worker) return worker.get(retrievedJob.worker)
     else throw new Error("No worker assigned to this job")
   }).then(function(worker){
-    console.log(worker)
+    return worker.contentExist(handle, file)
   })
-  /*
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/content/exists'),
-        json: {
-          handle: handle,
-          file: file
-        }
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return !!body.exists
-    })
-    .catch(that.handleNetworkError)*/
 }
 
 
@@ -329,9 +310,12 @@ Shredder.prototype.jobContentExists = function(handle,file){
  * @return {string}
  */
 Shredder.prototype.jobContentUrl = function(handle,file){
-  var that = this
-  return 'https://' + that.opts.master.host + ':' + that.opts.master.port +
-    '/job/content/download/' + handle + '/' + file
+  return job.getByHandle(handle).then(function(retrievedJob){
+    if(retrievedJob.worker) return worker.get(retrievedJob.worker)
+    else throw new Error("No worker assigned to this job")
+  }).then(function(worker){
+    return worker.contentDownloadURL(handle, file)
+  })
 }
 
 

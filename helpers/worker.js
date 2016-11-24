@@ -4,7 +4,6 @@ var cradle
 var api = require('./api')
 var sessionToken = null  //We only need one for all the workers
 var sessionTokenName = ''
-var cache = {}
 var username = ''
 var password = ''
 
@@ -17,11 +16,11 @@ exports.setSessionTokenName = function(name){
 }
 
 exports.setUsername = function(uname){
-  username=uname
+  username = uname
 }
 
 exports.setPassword = function(pwd){
-  password=pwd
+  password = pwd
 }
 
 var getConfig = function(name){
@@ -53,15 +52,14 @@ var getAvailable = exports.getAvailable = function(){
 }
 
 var get = exports.get = function(name){
-  if(cache[name]) return cache[name]
   return getConfig(name).then(function(workerCfg){
     if(!workerCfg) return null
-
+    return construct(workerCfg)
   })
 }
 
 function construct(config){
-  var that = this
+  var that = {}
   var request = api.worker(config)
 
   that.request = request
@@ -73,29 +71,26 @@ function construct(config){
         file: file
       }
     }).spread(function(res,body){
+      if(body.error) throw new Error(body.error)
       return !!body.exists
     })
   }
 
-  that.contentDownload = function(file){
-    return request.postAsync({
-      url: request.url('/user/login'),
-      json: {
-        username: username,
-        password: password
-      }
-    })
+  that.contentDownloadURL = function(handle,file){
+    return 'https://' + config.host + ':' + config.port +
+      '/job/content/download/' + handle + '/' + file
   }
 
   if(sessionToken){
-    api.setSession(sessionToken,request,sessionTokenName)
+    request=api.setSession(sessionToken,request,sessionTokenName)
     return that
   }else{
     return login(that).then(function(){
-      api.setSession(sessionToken,request,sessionTokenName)
+      request=api.setSession(sessionToken,request,sessionTokenName)
       return that
     })
   }
+
 }
 
 /**
@@ -106,7 +101,7 @@ function construct(config){
  */
 function login (worker){
   return worker.request.postAsync({
-    url: worker.request.url('/user/login'),
+    url: worker.request.url('/login'),
     json: {
       username: username,
       password: password
@@ -114,24 +109,8 @@ function login (worker){
   })
   .spread(function(res,body){
     if(!body.session)
-      throw new UserError('Login failed, no session')
+      throw new Error('Login failed, no session')
     sessionToken = body.session
     return sessionToken
   })
-}
-
-
-/**
- * Set session on any request object
- * @param {object} session
- * @param {request} request
- * @param {string} tokenName
- * @return {request}
- */
-var setSession = function(session,request,tokenName){
-  var newOptions = {headers: {}}
-  newOptions.headers[tokenName || config.sessionTokenName] = session.token
-  var req = request.defaults(newOptions)
-  req = extendRequest(req,request.options.type,request.options)
-  return req
 }

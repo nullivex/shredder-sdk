@@ -12,7 +12,13 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 var mockConfig = {
   port: 5980,
   host: '127.0.0.1',
-  database: 'shredder'
+  database: 'shredder',
+  options: {
+    auth: {
+      username: 'shredder',
+      password: 'shredder'
+    }
+  }
 }
 
 var mockShredderConfig = {
@@ -115,31 +121,21 @@ describe('Shredder',function(){
         expect(result.count).to.equal(1)
       })
   })
-/*
+
   it('should check if content exists',function(){
-    couchInstance.databases[mockConfig.database][handle].worker = mockWorker.name
+    couchInstance.databases[mockConfig.database][handle].worker = mockShredderConfig.worker.name
     return shredder.jobContentExists(handle,'video.mp4')
       .then(function(result){
-        expect(result).to.equal(false)
+        expect(result).to.equal(true)
       })
   })
-
 
   it('should generate a content download url',function(){
-    var url = shredder.jobContentUrl(mock.job.handle,'video.mp4')
-    expect(url).to.equal(
-      'https://127.0.0.1:5980/job/content/download/' +
-      mock.job.handle + '/video.mp4'
-    )
+    return shredder.jobContentUrl(handle,'video.mp4').then(function(url){
+      expect(url).to.equal(
+        'https://127.0.0.1:5981/job/content/download/' +
+        handle + '/video.mp4'
+      )
+    })
   })
-  it('should connect with a session key',function(){
-    var shredder = new Shredder().setSession(mock.user.session.token)
-    return shredder.connect(mockConfig.master.host,mockConfig.master.port)
-      .then(function(){
-        return shredder.jobContentExists(mock.job.handle,'video.mp4')
-      })
-      .then(function(result){
-        expect(result).to.equal(false)
-      })
-  })*/
 })
