@@ -22,6 +22,11 @@ exports.mock = require('./mock')
  */
 exports.Shredder = require('./helpers/Shredder')
 
+/**
+ * Couch Session helper
+ * @type {object}
+ */
+exports.couchSession = require('./helpers/couchSession')
 
 /**
  * Max Concurrency Error

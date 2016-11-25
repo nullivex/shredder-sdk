@@ -9,6 +9,8 @@ var UserError = oose.UserError
 var cradle = require('./couchdb')
 var job = require('./job')
 var worker = require('./worker')
+var couchSession = require('./couchSession')
+
 //make some promises
 P.promisifyAll(dns)
 
@@ -44,7 +46,15 @@ var Shredder = function(opts){
   this.authenticated = false
   this.connected = false
   this.session = {}
+
+  worker.setSessionTokenName(this.opts.sessionToken)
+  worker.setUsername(this.opts.options.auth.username)
+  worker.setPassword(this.opts.options.auth.password)
+  couchSession.setConfig(this.opts.host,this.opts.port,this.opts.options.secure)
 }
+
+
+Shredder.prototype.couchSession = couchSession
 
 
 /**
@@ -103,17 +113,15 @@ Shredder.prototype.connect = function(host,port){
 Shredder.prototype.login = function(username,password){
   var that = this
   var client = that.client = cradle(that.opts)
-  
   job.setClient(client)
   worker.setClient(client)
-  worker.setSessionTokenName(that.opts.sessionToken)
-  worker.setUsername(that.opts.options.auth.username)
-  worker.setPassword(that.opts.options.auth.password)
 
-  return client.uuidsAsync().then(function(info){
+  return that.couchSession.login(that.opts.options.auth.username,that.opts.options.auth.password).then(function(session){
+    that.session = session
     that.authenticated = true
     that.connected = true
-    return true
+    worker.setSessionToken(session)
+    return session.token
   },function(err){
     console.log(err)
     throw new UserError('Connection failed')

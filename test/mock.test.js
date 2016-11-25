@@ -2,6 +2,7 @@
 var expect = require('chai').expect
 var mock = require('../mock')
 var Shredder = require('../helpers/Shredder')
+var mockSession = require('../mock/helpers/session');
 
 var shredderConfig = {
   port: 5980,
@@ -29,6 +30,7 @@ describe('mock',function(){
   //start servers and create a user
   before(function(){
     shredder = new Shredder(shredderConfig)
+    shredder.couchSession = mockSession
     return mock.start(mockConfig).then(function(){
       return shredder.connect(shredderConfig.host,shredderConfig.port)
     })
@@ -41,7 +43,7 @@ describe('mock',function(){
   it('should start up',function(){
     return shredder.login()
       .then(function(result){
-        expect(result).to.be.true;
+        expect(result).to.be.a('string');
       })
   })
 

@@ -23,6 +23,10 @@ exports.setPassword = function(pwd){
   password = pwd
 }
 
+exports.setSessionToken = function(token){
+  sessionToken=token
+}
+
 var getConfig = function(name){
   return cradle.db.viewAsync('workers/all',{key:name})
     .then(function(jobRes){
@@ -85,12 +89,8 @@ function construct(config){
     request=api.setSession(sessionToken,request,sessionTokenName)
     return that
   }else{
-    return login(that).then(function(){
-      request=api.setSession(sessionToken,request,sessionTokenName)
-      return that
-    })
+    return that
   }
-
 }
 
 /**

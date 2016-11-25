@@ -5,6 +5,7 @@ var expect = require('chai').expect
 var mockJob = require('../mock/helpers/job')
 var Shredder = require('../helpers/Shredder')
 var mock = require('../mock');
+var mockSession = require('../mock/helpers/session');
 
 //prevent bad cert errors during testing
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
@@ -44,6 +45,7 @@ describe('Shredder',function(){
   //start servers and create a user
   before(function(){
     shredder = new Shredder(mockConfig)
+    shredder.couchSession = mockSession
     return mock.start(mockShredderConfig).then(function(cInstance){
       couchInstance=cInstance
       return shredder.connect(mockConfig.host,mockConfig.port)
@@ -137,5 +139,18 @@ describe('Shredder',function(){
         handle + '/video.mp4'
       )
     })
+  })
+
+  it('should connect with a session key',function(){
+      var token = mockSession.getToken()
+      var shredder = new Shredder().setSession(token)
+      shredder.couchSession = mockSession
+      return shredder.connect(mockConfig.host,mockConfig.port)
+        .then(function(){
+          return shredder.jobContentExists(handle,'video.mp4')
+      })
+      .then(function(result){
+          expect(result).to.equal(true)
+      })
   })
 })

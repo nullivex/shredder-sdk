@@ -10,8 +10,8 @@ program
   .version(pkg.version)
   .option('-u, --username <s>','Username for login')
   .option('-p, --password <s>','Password for login')
-  .option('-H, --host <s>','Master host, defaults to master.shredder.io')
-  .option('-P, --port <n>','Master port, defaults to 5980')
+  .option('-H, --host <s>','Couch host, defaults to localhost')
+  .option('-P, --port <n>','Couch port, defaults to 5984')
   .parse(process.argv)
 
 
@@ -21,8 +21,8 @@ program
  */
 var shredderConfig = {
   master: {
-    host: program.host || 'master.shredder.io',
-    port: program.port || 5980
+    host: program.host || 'localhost',
+    port: program.port || 5984
   }
 }
 

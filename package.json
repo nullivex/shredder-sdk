@@ -25,7 +25,8 @@
     "graceful-fs": "^3.0.6",
     "object-manage": "^0.8.0",
     "oose-sdk": "^1.1.7",
-    "request": "^2.55.0"
+    "request": "^2.55.0",
+    "request-promise" : "^4.0.2"
   },
   "bin": {
     "shredder-keygen": "./bin/shredder-keygen"

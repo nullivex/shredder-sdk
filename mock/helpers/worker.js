@@ -3,6 +3,8 @@ var bodyParser = require('body-parser')
 var express = require('express')
 var fs = require('graceful-fs')
 var https = require('https')
+var mockSession = require('./session')
+
 var routes
 var sslOptions = {
   key: fs.readFileSync(__dirname + '/../../ssl/shredder_test.pem'),
@@ -81,7 +83,7 @@ var routerFactory = function(){
       res.status(401)
       res.json({error: "No token"})
     }else{
-      if(sentToken != token){
+      if(!mockSession.isSessionValid(sentToken)){
         res.status(401)
         res.json({error: "Wrong session"})
       }else{
