@@ -25,7 +25,7 @@ exports.login = function(username,password){
   if(!username || !password){
     throw new Error('Invalid username or password')
   } else {
-    request({
+    return request({
       url: couchLoginUrl,
       method: 'POST',
       resolveWithFullResponse: true,
@@ -68,7 +68,7 @@ exports.login = function(username,password){
           success: 'User logged in',
           session: {
             token: sessionToken,
-            ip: req.ip,
+            ip: '',
             data: result.body
           }
         }

@@ -126,7 +126,7 @@ Shredder.prototype.login = function(username,password){
     console.log(err)
     throw new UserError('Connection failed')
   })
-  .catch(that.api.handleNetworkError)
+ // .catch(that.api.handleNetworkError)
 }
 
 
@@ -179,7 +179,8 @@ Shredder.prototype.jobCreate = function(description,priority,category){
     description: description,
     priority: priority || null,
     category: category || 'resource',
-    status: 'staged'
+    status: 'staged',
+    type:'job'
   })
 }
 

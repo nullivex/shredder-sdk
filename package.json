@@ -26,7 +26,8 @@
     "object-manage": "^0.8.0",
     "oose-sdk": "^1.1.7",
     "request": "^2.55.0",
-    "request-promise" : "^4.0.2"
+    "request-promise" : "^4.0.2",
+    "mock-couch": "0.1.8"
   },
   "bin": {
     "shredder-keygen": "./bin/shredder-keygen"
@@ -37,7 +38,6 @@
   },
   "devDependencies": {
     "chai": "2.2.x",
-    "mocha": "^2.2.3",
-    "mock-couch": "0.1.8"
+    "mocha": "^2.2.3"
   }
 }
