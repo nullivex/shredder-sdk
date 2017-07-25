@@ -1,12 +1,18 @@
+'use strict';
 var request = require('request-promise')
-var P = require('bluebird')
 var couchLoginUrl
 
 
+/**
+ * Set config for session
+ * @param {string} host
+ * @param {string} port
+ * @param {boolean} secure
+ */
 exports.setConfig = function(host,port,secure){
   host = host||'localhost'
   couchLoginUrl =
-    (!!secure) ? 'https://' : 'http://' +
+    (secure) ? 'https://' : 'http://' +
     host + ':' +
     port + '/_session'
 }
@@ -14,11 +20,12 @@ exports.setConfig = function(host,port,secure){
 
 /**
  * User Login
- * @param {object} req
- * @param {object} res
+ * @param {object} username
+ * @param {object} password
+ * @this couchSession
+ * @return {P}
  */
 exports.login = function(username,password){
-  var that = this
   //redis.incr(redis.schema.counter('prism','user:login'))
   var sessionToken
   //make a login request to couch db
@@ -64,7 +71,7 @@ exports.login = function(username,password){
             'Failed to query session information ' + result.body.toJSON())
         }
         //establish session?
-        var session = {
+        return {
           success: 'User logged in',
           session: {
             token: sessionToken,
@@ -72,7 +79,6 @@ exports.login = function(username,password){
             data: result.body
           }
         }
-        return session
       })
       .catch(function(err){
         if(401 === err.statusCode){

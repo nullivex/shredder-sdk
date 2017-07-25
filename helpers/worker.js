@@ -118,10 +118,10 @@ exports.setSessionToken = function(token){
  * @return {P}
  */
 var getConfig = function(name){
-  return nano.shredder.viewAsync('workers/all',{key:name})
-    .then(function(jobRes){
-      if(jobRes && jobRes.length){
-        return jobRes[0].value
+  return nano.shredder.viewAsync('workers','all',{key:name})
+    .then(function(result){
+      if(result.rows && result.rows.length){
+        return result.rows[0].value
       }else{
         return null
       }
@@ -136,7 +136,7 @@ var getConfig = function(name){
  * @return {P}
  */
 exports.getAvailable = function(){
-  return nano.shredder.viewAsync('workers/available')
+  return nano.shredder.viewAsync('workers','available')
     .then(function(jobRes){
       var result = []
       if(jobRes && jobRes.length){

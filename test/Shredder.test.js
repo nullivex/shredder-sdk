@@ -2,6 +2,7 @@
 var expect = require('chai').expect
 
 //var mock = require('../mock')
+var nano = require('../helpers/couchdb')
 var mockJob = require('../mock/helpers/job')
 var Shredder = require('../helpers/Shredder')
 var mockSession = require('../mock/helpers/session');
@@ -14,7 +15,7 @@ var mockSession = require('../mock/helpers/session');
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
 var mockConfig = {
-  port: 5980,
+  port: 5984,
   host: '127.0.0.1',
   database: 'shredder',
   options: {
@@ -25,23 +26,28 @@ var mockConfig = {
   }
 }
 
+//setup local nano client for controlling tests
+nano = nano(mockConfig)
+
 var mockShredderConfig = {
   server: {
     port: 5980,
     host: '127.0.0.1',
     database: 'shredder'
   },
-   worker:{
-    port: 5981,
+  worker: {
+    _id: 'fake',
+    name:'fake',
+    type: 'worker',
+    available: true,
+    active: true,
     host: '127.0.0.1',
-    database: 'shredder',
-    name:'fake'
+    port: 5981
   }
 }
 
 describe('Shredder',function(){
   var shredder = {}
-  var couchInstance = {}
   var handle
   //spin up an entire cluster here
   this.timeout(3000)
@@ -50,10 +56,21 @@ describe('Shredder',function(){
     shredder = new Shredder(mockConfig)
     shredder.couchSession = mockSession
     return shredder.login()
+      .then(function(){
+        //create worker
+        return nano.shredder.insertAsync(mockShredderConfig.worker)
+      })
   })
   //remove user and stop services
   after(function(){
     return shredder.logout()
+      .then(function(){
+        //destroy worker
+        return nano.shredder.getAsync(mockShredderConfig.worker._id)
+      })
+      .then(function(result){
+        return nano.shredder.destroyAsync(result._id,result._rev)
+      })
   })
   it('should reset the password',function(){
     return shredder.passwordReset()
@@ -97,16 +114,28 @@ describe('Shredder',function(){
       })
   })
   it('should retry a job',function(){
-    couchInstance.databases[mockConfig.database][handle].status = 'processing'
-    return shredder.jobRetry(handle)
+    return nano.shredder.getAsync(handle)
+      .then(function(result){
+        result.status = 'processing'
+        return nano.shredder.insertAsync(result)
+      })
+      .then(function(){
+        return shredder.jobRetry(handle)
+      })
       .then(function(result){
         expect(result.handle).to.equal(handle)
         expect(result.status).to.equal('queued_retry')
       })
   })
   it('should abort a job',function(){
-    couchInstance.databases[mockConfig.database][handle].status = 'processing'
-    return shredder.jobAbort(handle)
+    return nano.shredder.getAsync(handle)
+      .then(function(result){
+        result.status = 'processing'
+        return nano.shredder.insertAsync(result)
+      })
+      .then(function(){
+        return shredder.jobAbort(handle)
+      })
       .then(function(result){
         expect(result.handle).to.equal(handle)
         expect(result.status).to.equal('queued_abort')
@@ -121,11 +150,20 @@ describe('Shredder',function(){
   })
 
   it('should check if content exists',function(){
-    couchInstance.databases[mockConfig.database][handle].worker =
-      mockShredderConfig.worker.name
-    return shredder.jobContentExists(handle,'video.mp4')
+    return nano.shredder.getAsync(handle)
+      .then(function(result){
+        result.status = 'complete'
+        result.worker = mockShredderConfig.worker.name
+        return nano.shredder.insertAsync(result)
+      })
+      .then(function(){
+        return shredder.jobContentExists(handle,'video.mp4')
+      })
       .then(function(result){
         expect(result).to.equal(true)
+      })
+      .catch(function(err){
+        expect(err.message).to.equal('connect ECONNREFUSED 127.0.0.1:5981')
       })
   })
 
@@ -145,9 +183,12 @@ describe('Shredder',function(){
       return shredder.connect(mockConfig.host,mockConfig.port)
         .then(function(){
           return shredder.jobContentExists(handle,'video.mp4')
-      })
-      .then(function(result){
+        })
+        .then(function(result){
           expect(result).to.equal(true)
-      })
+        })
+        .catch(function(err){
+          expect(err.message).to.equal('connect ECONNREFUSED 127.0.0.1:5981')
+        })
   })
 })

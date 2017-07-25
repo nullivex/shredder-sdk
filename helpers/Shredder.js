@@ -23,7 +23,8 @@ P.promisifyAll(dns)
 var Shredder = function(opts){
   //setup options
   this.opts = new ObjectManage({
-      host: null,
+      protocol: 'http://',
+      host: '127.0.0.1',
       port: '5984',
       prefix: 'shredder',
       database: 'shredder',
@@ -114,6 +115,7 @@ Shredder.prototype.connect = function(host){
  */
 Shredder.prototype.login = function(username,password){
   var that = this
+  //setup our client
   var client = that.client = nano(that.opts)
   job.setClient(client)
   worker.setClient(client)
@@ -208,15 +210,16 @@ Shredder.prototype.jobUpdate = function(handle,changes,force){
   //force boolean
   force = (force)
   this.prepare()
-  return job.getByHandle(handle).then(function(retrievedJob){
-    if('staged' !== retrievedJob.status && !force){
-      throw new UserError('Job cannot be updated after being started')
-    }
-    if(changes.description) retrievedJob.description = changes.description
-    if(changes.priority) retrievedJob.priority = changes.priority
-    if(changes.status && force) retrievedJob.status = changes.status
-    return job.save(retrievedJob)
-  })
+  return job.getByHandle(handle)
+    .then(function(result){
+      if('staged' !== result.status && !force){
+        throw new UserError('Job cannot be updated after being started')
+      }
+      if(changes.description) result.description = changes.description
+      if(changes.priority) result.priority = changes.priority
+      if(changes.status && force) result.status = changes.status
+      return job.save(result)
+    })
 }
 
 
@@ -227,12 +230,12 @@ Shredder.prototype.jobUpdate = function(handle,changes,force){
  */
 Shredder.prototype.jobRemove = function(handle){
   this.prepare()
-  return job.getByHandle(handle).then(function(retrievedJob){
-    if('processing' !== retrievedJob.status){
-      retrievedJob.status = 'removed'
-      return job.save(retrievedJob)
+  return job.getByHandle(handle).then(function(result){
+    if('processing' !== result.status){
+      result.status = 'removed'
+      return job.save(result)
     }else{
-      return job.remove(retrievedJob)
+      return job.remove(result)
     }
   }).then(function(){
     return({success: 'Job removed', count: 1})
@@ -247,12 +250,12 @@ Shredder.prototype.jobRemove = function(handle){
  */
 Shredder.prototype.jobStart = function(handle){
   this.prepare()
-  return job.getByHandle(handle).then(function(retrievedJob){
-    if('staged' !== retrievedJob.status){
+  return job.getByHandle(handle).then(function(result){
+    if('staged' !== result.status){
       throw new UserError('Job cannot be started after being started')
     }else{
-      retrievedJob.status = 'queued'
-      return job.save(retrievedJob)
+      result.status = 'queued'
+      return job.save(result)
     }
   })
 }
@@ -274,16 +277,16 @@ Shredder.prototype.jobRetry = function(handle){
     'processing',
     'archived'
   ]
-  return job.getByHandle(handle).then(function(retrievedJob){
-    if(validStatus.indexOf(retrievedJob.status) < 0){
+  return job.getByHandle(handle).then(function(result){
+    if(validStatus.indexOf(result.status) < 0){
       throw new UserError(
         'Job cannot be retried ' +
-        'with a status of ' + retrievedJob.status
+        'with a status of ' + result.status
       )
     }else{
-      if(retrievedJob.status !== 'processing') retrievedJob.worker = null
-      retrievedJob.status = 'queued_retry'
-      return job.save(retrievedJob)
+      if(result.status !== 'processing') result.worker = null
+      result.status = 'queued_retry'
+      return job.save(result)
     }
   })
 }
@@ -314,12 +317,14 @@ Shredder.prototype.jobAbort = function(handle){
  * @return {P}
  */
 Shredder.prototype.jobContentExists = function(handle,file){
-  return job.getByHandle(handle).then(function(retrievedJob){
-    if(retrievedJob.worker) return worker.get(retrievedJob.worker)
-    else throw new Error('No worker assigned to this job')
-  }).then(function(worker){
-    return worker.contentExist(handle, file)
-  })
+  return job.getByHandle(handle)
+    .then(function(result){
+      if(result.worker) return worker.get(result.worker)
+      else throw new Error('No worker assigned to this job')
+    })
+    .then(function(worker){
+      return worker.contentExist(handle, file)
+    })
 }
 
 
