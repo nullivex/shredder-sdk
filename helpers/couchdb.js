@@ -24,7 +24,7 @@ module.exports = function(config){
   }
   dsn = dsn + config.host
   dsn = dsn + ':' + config.port
-  config.log(dsn)
+  console.log(dsn)
   var client = nano(dsn)
 
   //make some promises
