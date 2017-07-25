@@ -1,25 +1,30 @@
 'use strict';
 var P = require('bluebird')
-var cradle = require('cradle')
+var nano = require('nano')
 
-var client = null
 //make some promises
-P.promisifyAll(cradle)
+P.promisifyAll(nano)
 
-//setup our client
 
 /**
  * Export client
+ * @param {object} config
  * @return {object} client
  */
 module.exports = function(config){
-  if(client) return client;
-
-  client = new (cradle.Connection)(
-    config.host,
-    config.port,
-    config.options
-  )
+  //setup our client
+  var dsn = config.protocol || 'http://'
+  if(config.auth && config.auth.username){
+    dsn = dsn + config.auth.username
+    var couchPassword= 'password'
+    if(config.auth.password !== '')
+      couchPassword = config.auth.password
+    dsn = dsn + ':' + couchPassword
+    dsn = dsn + '@'
+  }
+  dsn = dsn + config.host
+  dsn = dsn + ':' + config.port
+  var client = nano(dsn)
 
   //make some promises
   P.promisifyAll(client)
@@ -29,7 +34,7 @@ module.exports = function(config){
    * Setup the DB access
    * @type {object}
    */
-  client.db = P.promisifyAll(client.database(config.database))
+  client.shredder = P.promisifyAll(client.db.use(config.database || 'shredder'))
 
   return client
 }

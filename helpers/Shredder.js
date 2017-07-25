@@ -4,9 +4,8 @@ var dns = require('dns')
 var ObjectManage = require('object-manage')
 var oose = require('oose-sdk')
 
-var api = require('./api')
 var UserError = oose.UserError
-var cradle = require('./couchdb')
+var nano = require('./couchdb')
 var job = require('./job')
 var worker = require('./worker')
 var couchSession = require('./couchSession')
@@ -54,6 +53,10 @@ var Shredder = function(opts){
 }
 
 
+/**
+ * Setup the CouchDB session
+ * @type {object}
+ */
 Shredder.prototype.couchSession = couchSession
 
 
@@ -90,10 +93,9 @@ Shredder.prototype.setSession = function(sessionToken){
 /**
  * Select a prism and prepare for connection
  * @param {string} host
- * @param {number} port
  * @return {P}
  */
-Shredder.prototype.connect = function(host,port){
+Shredder.prototype.connect = function(host){
   var that = this
   return P.try(function(){
     that.connected = true
@@ -112,31 +114,30 @@ Shredder.prototype.connect = function(host,port){
  */
 Shredder.prototype.login = function(username,password){
   var that = this
-  var client = that.client = cradle(that.opts)
+  var client = that.client = nano(that.opts)
   job.setClient(client)
   worker.setClient(client)
-
-  return that.couchSession.login(that.opts.options.auth.username,that.opts.options.auth.password).then(function(session){
-    that.session = session
-    that.authenticated = true
-    that.connected = true
-    worker.setSessionToken(session)
-    return session.token
-  },function(err){
-    console.log(err)
-    throw new UserError('Connection failed')
-  })
- // .catch(that.api.handleNetworkError)
+  if(!username) username = that.opts.options.auth.username
+  if(!password) password = that.opts.options.auth.password
+  return that.couchSession.login(username,password)
+    .then(function(session){
+      that.session = session
+      that.authenticated = true
+      that.connected = true
+      worker.setSessionToken(session)
+      return session.token
+    },function(err){
+      console.log(err)
+      throw new UserError('Connection failed')
+    })
 }
 
 
 /**
  * Prepare call and renew session if needed
- * @param {object} request
- * @param {object} session
  * @return {P}
  */
-Shredder.prototype.prepare = function(request,session){
+Shredder.prototype.prepare = function(){
   var that = this
   if(!that.isConnected()) throw new UserError('Not connected')
   if(!that.isAuthenticated()) throw new UserError('Not authenticated')
@@ -149,7 +150,7 @@ Shredder.prototype.prepare = function(request,session){
  * @return {P}
  */
 Shredder.prototype.logout = function(){
-  return new P(function(resolve,reject){
+  return new P(function(resolve){
     resolve(true)
   })
 }
@@ -160,7 +161,7 @@ Shredder.prototype.logout = function(){
  * @return {P}
  */
 Shredder.prototype.passwordReset = function(){
-  return new P(function(resolve,reject){
+  return new P(function(resolve){
     resolve({password:'Reset'})
   })
 }
@@ -200,10 +201,12 @@ Shredder.prototype.jobDetail = function(handle){
  * Job Update
  * @param {string} handle
  * @param {object} changes
+ * @param {boolean} force
  * @return {P}
  */
 Shredder.prototype.jobUpdate = function(handle,changes,force){
-  force = !!force
+  //force boolean
+  force = (force)
   this.prepare()
   return job.getByHandle(handle).then(function(retrievedJob){
     if('staged' !== retrievedJob.status && !force){
@@ -262,7 +265,15 @@ Shredder.prototype.jobStart = function(handle){
  */
 Shredder.prototype.jobRetry = function(handle){
   this.prepare()
-  var validStatus = ['error','timeout','aborted','unknown','complete','processing','archived']
+  var validStatus = [
+    'error',
+    'timeout',
+    'aborted',
+    'unknown',
+    'complete',
+    'processing',
+    'archived'
+  ]
   return job.getByHandle(handle).then(function(retrievedJob){
     if(validStatus.indexOf(retrievedJob.status) < 0){
       throw new UserError(
@@ -270,7 +281,7 @@ Shredder.prototype.jobRetry = function(handle){
         'with a status of ' + retrievedJob.status
       )
     }else{
-      if(retrievedJob.status != 'processing') retrievedJob.worker = null
+      if(retrievedJob.status !== 'processing') retrievedJob.worker = null
       retrievedJob.status = 'queued_retry'
       return job.save(retrievedJob)
     }
@@ -305,7 +316,7 @@ Shredder.prototype.jobAbort = function(handle){
 Shredder.prototype.jobContentExists = function(handle,file){
   return job.getByHandle(handle).then(function(retrievedJob){
     if(retrievedJob.worker) return worker.get(retrievedJob.worker)
-    else throw new Error("No worker assigned to this job")
+    else throw new Error('No worker assigned to this job')
   }).then(function(worker){
     return worker.contentExist(handle, file)
   })
@@ -321,7 +332,7 @@ Shredder.prototype.jobContentExists = function(handle,file){
 Shredder.prototype.jobContentUrl = function(handle,file){
   return job.getByHandle(handle).then(function(retrievedJob){
     if(retrievedJob.worker) return worker.get(retrievedJob.worker)
-    else throw new Error("No worker assigned to this job")
+    else throw new Error('No worker assigned to this job')
   }).then(function(worker){
     return worker.contentDownloadURL(handle, file)
   })

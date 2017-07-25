@@ -4,10 +4,13 @@ var expect = require('chai').expect
 //var mock = require('../mock')
 var mockJob = require('../mock/helpers/job')
 var Shredder = require('../helpers/Shredder')
-var mock = require('../mock');
 var mockSession = require('../mock/helpers/session');
 
-//prevent bad cert errors during testing
+
+/**
+ * Prevent crashing on bad SSL certs
+ * @type {string}
+ */
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
 var mockConfig = {
@@ -23,7 +26,7 @@ var mockConfig = {
 }
 
 var mockShredderConfig = {
-  server :{
+  server: {
     port: 5980,
     host: '127.0.0.1',
     database: 'shredder'
@@ -46,18 +49,11 @@ describe('Shredder',function(){
   before(function(){
     shredder = new Shredder(mockConfig)
     shredder.couchSession = mockSession
-    return mock.start(mockShredderConfig).then(function(cInstance){
-      couchInstance=cInstance
-      return shredder.connect(mockConfig.host,mockConfig.port)
-    }).then(function(){
-      return shredder.login()
-    })
+    return shredder.login()
   })
   //remove user and stop services
   after(function(){
-    return mock.stop().then(function(){
-      return shredder.logout()
-    })   
+    return shredder.logout()
   })
   it('should reset the password',function(){
     return shredder.passwordReset()
@@ -125,7 +121,8 @@ describe('Shredder',function(){
   })
 
   it('should check if content exists',function(){
-    couchInstance.databases[mockConfig.database][handle].worker = mockShredderConfig.worker.name
+    couchInstance.databases[mockConfig.database][handle].worker =
+      mockShredderConfig.worker.name
     return shredder.jobContentExists(handle,'video.mp4')
       .then(function(result){
         expect(result).to.equal(true)
