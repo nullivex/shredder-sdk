@@ -1,5 +1,7 @@
 'use strict';
+var P = require('bluebird')
 var expect = require('chai').expect
+var fs = require('fs')
 
 //var mock = require('../mock')
 var nano = require('../helpers/couchdb')
@@ -56,6 +58,25 @@ describe('Shredder',function(){
     shredder = new Shredder(mockConfig)
     shredder.couchSession = mockSession
     return shredder.login()
+      .then(function(){
+        //create views
+        return P.all([
+          nano.shredder.insertAsync(
+            JSON.parse(fs.readFileSync('./test/design/jobs.json')),
+            '_design/jobs'
+          )
+            .catch(function(err){
+              if('Document update conflict.' !== err.message) throw err
+            }),
+          nano.shredder.insertAsync(
+            JSON.parse(fs.readFileSync('./test/design/workers.json')),
+            '_design/workers'
+          )
+            .catch(function(err){
+              if('Document update conflict.' !== err.message) throw err
+            })
+        ])
+      })
       .then(function(){
         //create worker
         return nano.shredder.insertAsync(mockShredderConfig.worker)
