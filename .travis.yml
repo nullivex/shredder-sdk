@@ -19,6 +19,5 @@ services:
 env:
   - TRAVIS=travis CXX=g++-4.9
 before_script:
-  - curl -X PUT http://localhost:5984/_config/admins/shredder -d '"shredder"'
+  - curl -s -X PUT http://localhost:5984/_config/admins/shredder -d '"shredder"'
   - curl -X PUT http://shredder:shredder@localhost:5984/shredder
-  - curl -X GET http://shredder:shredder@localhost:5984/_config
