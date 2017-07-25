@@ -16,7 +16,7 @@ module.exports = function(config){
   var dsn = config.protocol || 'http://'
   if(config.auth && config.auth.username){
     dsn = dsn + config.auth.username
-    var couchPassword= 'password'
+    var couchPassword = 'password'
     if(config.auth.password !== '')
       couchPassword = config.auth.password
     dsn = dsn + ':' + couchPassword
@@ -24,6 +24,7 @@ module.exports = function(config){
   }
   dsn = dsn + config.host
   dsn = dsn + ':' + config.port
+  config.log(dsn)
   var client = nano(dsn)
 
   //make some promises
