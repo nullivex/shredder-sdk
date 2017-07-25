@@ -19,5 +19,7 @@ services:
 env:
   - TRAVIS=travis CXX=g++-4.9
 before_script:
+  - couchdb -V
   - curl -s -X PUT http://localhost:5984/_config/admins/shredder -d '"shredder"'
-  - curl -X PUT http://shredder:shredder@localhost:5984/shredder
+  - curl -u shredder:shredder -X PUT http://localhost:5984/shredder
+  - export NODE_DEBUG=request
