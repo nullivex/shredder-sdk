@@ -75,6 +75,13 @@ describe('my test',function(){
 
 ## Changelog
 
+### 2.0.0
+* Change to operate Couchdb rather than the Shredder master
+* Update dependencies and test across Node 4,5,6,7,8
+* Change from `cradle` to `nano` to provide Couchdb access
+* Drop Couchdb mock in favor of using real Couchdb
+* Matches Shredder 2.0.0 release.
+
 ### 1.1.9
 * Fix to get the keygen tool actually working.
 

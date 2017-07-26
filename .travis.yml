@@ -9,9 +9,16 @@ node_js:
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
+    - ubuntu-toolchain-r-test
     packages:
-      - gcc-4.9
-      - g++-4.9
+    - gcc-4.9
+    - g++-4.9
+services:
+  - couchdb
+  - redis
 env:
-  - TRAVIS=travis CC=gcc-4.9 CXX=g++-4.9
+  - TRAVIS=travis CXX=g++-4.9
+before_script:
+  - couchdb -V
+  - curl -s -X PUT http://localhost:5984/_config/admins/shredder -d '"shredder"'
+  - curl -u shredder:shredder -X PUT http://localhost:5984/shredder

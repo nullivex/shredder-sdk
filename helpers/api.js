@@ -6,14 +6,8 @@ var api = oose.api
 
 var config = {
   maxSockets: 8,
-  sessionTokenName: 'X-Shredder-Token',
+  sessionTokenName: 'X-SHREDDER-Token',
   rejectUnauthorized: false,
-  master: {
-    port: 5980,
-    host: '127.0.0.1',
-    username: 'shredder',
-    password: 'shredder'
-  },
   worker: {
     port: 5981,
     host: '127.0.0.1',

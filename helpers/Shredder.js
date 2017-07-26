@@ -4,8 +4,11 @@ var dns = require('dns')
 var ObjectManage = require('object-manage')
 var oose = require('oose-sdk')
 
-var api = require('./api')
 var UserError = oose.UserError
+var nano = require('./couchdb')
+var job = require('./job')
+var worker = require('./worker')
+var couchSession = require('./couchSession')
 
 //make some promises
 P.promisifyAll(dns)
@@ -20,12 +23,22 @@ P.promisifyAll(dns)
 var Shredder = function(opts){
   //setup options
   this.opts = new ObjectManage({
-    username: '',
-    password: '',
-    master: {
-      host: null,
-      port: 5980
-    }
+      protocol: 'http://',
+      host: '127.0.0.1',
+      port: '5984',
+      prefix: 'shredder',
+      database: 'shredder',
+      sessionToken:'X-SHREDDER-Token',
+      options: {
+        secure: false,
+        cache: false,
+        retries: 3,
+        retryTimeout: 10000,
+        auth: {
+          username: 'shredder',
+          password: ''
+        }
+      }
   })
   this.opts.$load(opts)
   //set properties
@@ -33,7 +46,19 @@ var Shredder = function(opts){
   this.authenticated = false
   this.connected = false
   this.session = {}
+
+  worker.setSessionTokenName(this.opts.sessionToken)
+  worker.setUsername(this.opts.options.auth.username)
+  worker.setPassword(this.opts.options.auth.password)
+  couchSession.setConfig(this.opts.host,this.opts.port,this.opts.options.secure)
 }
+
+
+/**
+ * Setup the CouchDB session
+ * @type {object}
+ */
+Shredder.prototype.couchSession = couchSession
 
 
 /**
@@ -69,16 +94,13 @@ Shredder.prototype.setSession = function(sessionToken){
 /**
  * Select a prism and prepare for connection
  * @param {string} host
- * @param {number} port
  * @return {P}
  */
-Shredder.prototype.connect = function(host,port){
+Shredder.prototype.connect = function(host){
   var that = this
   return P.try(function(){
-    if(host) that.opts.master.host = host
-    if(port) that.opts.master.port = port
     that.connected = true
-    that.api = api.master(that.opts.master)
+    //that.api = api.master(that.opts.master)
     return host
   })
 
@@ -93,42 +115,35 @@ Shredder.prototype.connect = function(host,port){
  */
 Shredder.prototype.login = function(username,password){
   var that = this
-  return that.api.postAsync({
-    url: that.api.url('/user/login'),
-    json: {
-      username: username || that.opts.username,
-      password: password || that.opts.password
-    }
-  })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      if(!body.session)
-        throw new UserError('Login failed, no session')
-      that.session = body.session
+  //setup our client
+  var client = that.client = nano(that.opts)
+  job.setClient(client)
+  worker.setClient(client)
+  if(!username) username = that.opts.options.auth.username
+  if(!password) password = that.opts.options.auth.password
+  return that.couchSession.login(username,password)
+    .then(function(session){
+      that.session = session
       that.authenticated = true
-      return that.session
+      that.connected = true
+      worker.setSessionToken(session)
+      return session.token
+    },function(err){
+      console.log(err)
+      throw new UserError('Connection failed')
     })
-    .catch(that.api.handleNetworkError)
 }
 
 
 /**
  * Prepare call and renew session if needed
- * @param {object} request
- * @param {object} session
  * @return {P}
  */
-Shredder.prototype.prepare = function(request,session){
+Shredder.prototype.prepare = function(){
   var that = this
-  if(!request) request = that.api
-  if(!session) session = that.session
-  var client = api.setSession(session,request,'X-Shredder-Token')
   if(!that.isConnected()) throw new UserError('Not connected')
   if(!that.isAuthenticated()) throw new UserError('Not authenticated')
-  return P.try(function(){
-    return client
-  })
-
+  return that.client
 }
 
 
@@ -137,21 +152,9 @@ Shredder.prototype.prepare = function(request,session){
  * @return {P}
  */
 Shredder.prototype.logout = function(){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/user/logout')
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      that.authenticated = false
-      return body
-    })
-    .catch(that.handleNetworkError)
+  return new P(function(resolve){
+    resolve(true)
+  })
 }
 
 
@@ -160,20 +163,9 @@ Shredder.prototype.logout = function(){
  * @return {P}
  */
 Shredder.prototype.passwordReset = function(){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/user/password/reset')
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
+  return new P(function(resolve){
+    resolve({password:'Reset'})
+  })
 }
 
 
@@ -185,25 +177,14 @@ Shredder.prototype.passwordReset = function(){
  * @return {P}
  */
 Shredder.prototype.jobCreate = function(description,priority,category){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/create'),
-        json: {
-          description: JSON.stringify(description),
-          priority: priority || null,
-          category: category || 'resource'
-        }
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
+  this.prepare()
+  return job.save({
+    description: description,
+    priority: priority || null,
+    category: category || 'resource',
+    status: 'staged',
+    type:'job'
+  })
 }
 
 
@@ -213,23 +194,8 @@ Shredder.prototype.jobCreate = function(description,priority,category){
  * @return {P}
  */
 Shredder.prototype.jobDetail = function(handle){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/detail'),
-        json: {
-          handle: handle
-        }
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
+  this.prepare()
+  return job.getByHandle(handle)
 }
 
 
@@ -237,24 +203,23 @@ Shredder.prototype.jobDetail = function(handle){
  * Job Update
  * @param {string} handle
  * @param {object} changes
+ * @param {boolean} force
  * @return {P}
  */
-Shredder.prototype.jobUpdate = function(handle,changes){
-  var that = this
-  var client = {}
-  return that.prepare()
+Shredder.prototype.jobUpdate = function(handle,changes,force){
+  //force boolean
+  force = (force)
+  this.prepare()
+  return job.getByHandle(handle)
     .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/update'),
-        json: changes
-      })
+      if('staged' !== result.status && !force){
+        throw new UserError('Job cannot be updated after being started')
+      }
+      if(changes.description) result.description = changes.description
+      if(changes.priority) result.priority = changes.priority
+      if(changes.status && force) result.status = changes.status
+      return job.save(result)
     })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
 }
 
 
@@ -264,23 +229,17 @@ Shredder.prototype.jobUpdate = function(handle,changes){
  * @return {P}
  */
 Shredder.prototype.jobRemove = function(handle){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/remove'),
-        json: {
-          handle: handle
-        }
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
+  this.prepare()
+  return job.getByHandle(handle).then(function(result){
+    if('processing' !== result.status){
+      result.status = 'removed'
+      return job.save(result)
+    }else{
+      return job.remove(result)
+    }
+  }).then(function(){
+    return({success: 'Job removed', count: 1})
+  })
 }
 
 
@@ -290,23 +249,15 @@ Shredder.prototype.jobRemove = function(handle){
  * @return {P}
  */
 Shredder.prototype.jobStart = function(handle){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/start'),
-        json: {
-          handle: handle
-        }
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
+  this.prepare()
+  return job.getByHandle(handle).then(function(result){
+    if('staged' !== result.status){
+      throw new UserError('Job cannot be started after being started')
+    }else{
+      result.status = 'queued'
+      return job.save(result)
+    }
+  })
 }
 
 
@@ -316,23 +267,28 @@ Shredder.prototype.jobStart = function(handle){
  * @return {P}
  */
 Shredder.prototype.jobRetry = function(handle){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/retry'),
-        json: {
-          handle: handle
-        }
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
+  this.prepare()
+  var validStatus = [
+    'error',
+    'timeout',
+    'aborted',
+    'unknown',
+    'complete',
+    'processing',
+    'archived'
+  ]
+  return job.getByHandle(handle).then(function(result){
+    if(validStatus.indexOf(result.status) < 0){
+      throw new UserError(
+        'Job cannot be retried ' +
+        'with a status of ' + result.status
+      )
+    }else{
+      if(result.status !== 'processing') result.worker = null
+      result.status = 'queued_retry'
+      return job.save(result)
+    }
+  })
 }
 
 
@@ -342,23 +298,15 @@ Shredder.prototype.jobRetry = function(handle){
  * @return {P}
  */
 Shredder.prototype.jobAbort = function(handle){
-  var that = this
-  var client = {}
-  return that.prepare()
-    .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/abort'),
-        json: {
-          handle: handle
-        }
-      })
-    })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return body
-    })
-    .catch(that.handleNetworkError)
+  this.prepare()
+  return job.getByHandle(handle).then(function(retrievedJob){
+    if('processing' !== retrievedJob.status){
+      throw new UserError('Job cannot be aborted when not processing')
+    }else{
+      retrievedJob.status = 'queued_abort'
+      return job.save(retrievedJob)
+    }
+  })
 }
 
 
@@ -369,24 +317,14 @@ Shredder.prototype.jobAbort = function(handle){
  * @return {P}
  */
 Shredder.prototype.jobContentExists = function(handle,file){
-  var that = this
-  var client = {}
-  return that.prepare()
+  return job.getByHandle(handle)
     .then(function(result){
-      client = result
-      return client.postAsync({
-        url: client.url('/job/content/exists'),
-        json: {
-          handle: handle,
-          file: file
-        }
-      })
+      if(result.worker) return worker.get(result.worker)
+      else throw new Error('No worker assigned to this job')
     })
-    .spread(that.api.validateResponse())
-    .spread(function(res,body){
-      return !!body.exists
+    .then(function(worker){
+      return worker.contentExist(handle, file)
     })
-    .catch(that.handleNetworkError)
 }
 
 
@@ -397,9 +335,12 @@ Shredder.prototype.jobContentExists = function(handle,file){
  * @return {string}
  */
 Shredder.prototype.jobContentUrl = function(handle,file){
-  var that = this
-  return 'https://' + that.opts.master.host + ':' + that.opts.master.port +
-    '/job/content/download/' + handle + '/' + file
+  return job.getByHandle(handle).then(function(retrievedJob){
+    if(retrievedJob.worker) return worker.get(retrievedJob.worker)
+    else throw new Error('No worker assigned to this job')
+  }).then(function(worker){
+    return worker.contentDownloadURL(handle, file)
+  })
 }
 
 
