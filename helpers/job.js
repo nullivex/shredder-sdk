@@ -39,6 +39,7 @@ exports.save = function(jobInstance){
   return nano.shredder.insertAsync(jobInstance,jobInstance.handle)
     .then(function(result){
       jobInstance._rev = result.rev
+      jobInstance._id = jobInstance.handle
       return jobInstance
     })
 }
