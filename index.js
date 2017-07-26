@@ -10,23 +10,18 @@ exports.api = require('./helpers/api')
 
 
 /**
- * Mock server
- * @type {object}
- */
-exports.mock = require('./mock')
-
-
-/**
  * Shredder helper
  * @type {object}
  */
 exports.Shredder = require('./helpers/Shredder')
+
 
 /**
  * Couch Session helper
  * @type {object}
  */
 exports.couchSession = require('./helpers/couchSession')
+
 
 /**
  * Max Concurrency Error
