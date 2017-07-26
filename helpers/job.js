@@ -1,5 +1,16 @@
 'use strict';
+var Password = require('node-password').Password
+
 var nano
+
+
+/**
+ * Generate job Handle
+ * @return {string}
+ */
+var generateHandle = function(){
+  return new Password({length: 12, special: false}).toString()
+}
 
 
 /**
@@ -24,33 +35,12 @@ exports.getByHandle = function(handle){
  * @return {P}
  */
 exports.save = function(jobInstance){
-  if(jobInstance._id){
-    return nano.shredder.insertAsync(jobInstance)
-      .then(function(result){
-        jobInstance._rev = result.rev
-        return jobInstance
-      },function(err){
-        throw err
-      })
-  } else {
-    return nano.shredder.insertAsync(jobInstance)
-      .then(function(job){
-        //here we add the handle now that we know it
-        jobInstance._id = job.id
-        jobInstance._rev = job.rev
-        jobInstance.handle = job.id
-        //and save again to preserve the handle property
-        return nano.shredder.insertAsync(jobInstance)
-          .then(function(job){
-            //freshen the instance and return
-            jobInstance._id = job.id
-            jobInstance._rev = job.rev
-            return jobInstance
-          })
-      },function(err){
-        throw err
-      })
-  }
+  if(!jobInstance.handle) jobInstance.handle = generateHandle()
+  return nano.shredder.insertAsync(jobInstance,jobInstance.handle)
+    .then(function(result){
+      jobInstance._rev = result.rev
+      return jobInstance
+    })
 }
 
 

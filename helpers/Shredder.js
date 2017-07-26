@@ -3,6 +3,7 @@ var P = require('bluebird')
 var dns = require('dns')
 var ObjectManage = require('object-manage')
 var oose = require('oose-sdk')
+var Password = require('node-password').Password
 
 var UserError = oose.UserError
 var nano = require('./couchdb')
@@ -14,9 +15,18 @@ var couchSession = require('./couchSession')
 P.promisifyAll(dns)
 
 
+/**
+ * Generate job Handle
+ * @return {string}
+ */
+var generateHandle = function(){
+  return new Password({length: 12, special: false}).toString()
+}
+
+
 
 /**
- * Prism Public Interaction Helper
+ * Shredder Interaction Helper
  * @param {object} opts
  * @constructor
  */
@@ -179,6 +189,7 @@ Shredder.prototype.passwordReset = function(){
 Shredder.prototype.jobCreate = function(description,priority,category){
   this.prepare()
   return job.save({
+    handle: generateHandle(),
     description: description,
     priority: priority || null,
     category: category || 'resource',
