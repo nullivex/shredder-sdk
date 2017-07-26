@@ -22,4 +22,3 @@ before_script:
   - couchdb -V
   - curl -s -X PUT http://localhost:5984/_config/admins/shredder -d '"shredder"'
   - curl -u shredder:shredder -X PUT http://localhost:5984/shredder
-  - export NODE_DEBUG=request
