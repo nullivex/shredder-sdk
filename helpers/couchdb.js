@@ -14,11 +14,11 @@ P.promisifyAll(nano)
 module.exports = function(config){
   //setup our client
   var dsn = config.protocol || 'http://'
-  if(config.auth && config.auth.username){
-    dsn = dsn + config.auth.username
+  if(config.options.auth && config.options.auth.username){
+    dsn = dsn + config.options.auth.username
     var couchPassword = 'password'
-    if(config.auth.password !== '')
-      couchPassword = config.auth.password
+    if(config.options.auth.password !== '')
+      couchPassword = config.options.auth.password
     dsn = dsn + ':' + couchPassword
     dsn = dsn + '@'
   }
