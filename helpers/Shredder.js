@@ -195,8 +195,10 @@ Shredder.prototype.jobCreate = function(description,priority,category){
     category: category || 'resource',
     status: 'staged',
     type:'job',
+    statusDescription: 'Staged',
     stepTotal: 1,
     stepComplete: 0,
+    frameDescription: 'Staged',
     frameTotal: 1,
     frameComplete: 0
   })
