@@ -75,18 +75,15 @@ describe('my test',function(){
 
 ## Changelog
 
-### 2.1.0
-* Update dependencies
-* Drop node 4, 5, and 7 testing (keeps 6 and 8)
-* Update oose-sdk
-* Adjust calls to match oose-sdk changes
-
 ### 2.0.0
 * Change to operate Couchdb rather than the Shredder master
-* Update dependencies and test across Node 4,5,6,7,8
+* Update dependencies and test across Node 6,8
 * Change from `cradle` to `nano` to provide Couchdb access
 * Drop Couchdb mock in favor of using real Couchdb
 * Matches Shredder 2.0.0 release.
+* Update dependencies
+* Update oose-sdk
+* Adjust calls to match oose-sdk changes
 
 ### 1.1.9
 * Fix to get the keygen tool actually working.
