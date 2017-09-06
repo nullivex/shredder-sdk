@@ -1,4 +1,4 @@
-shredder-sdk [![Build Status](https://travis-ci.org/eSited/shredder-sdk.svg?branch=master)](https://travis-ci.org/eSited/shredder-sdk)
+shredder-sdk [![Build Status](https://travis-ci.org/nullivex/shredder-sdk.svg?branch=master)](https://travis-ci.org/nullivex/shredder-sdk)
 ========
 
 shredder Software Development Kit
