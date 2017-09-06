@@ -75,6 +75,12 @@ describe('my test',function(){
 
 ## Changelog
 
+### 2.1.0
+* Update dependencies
+* Drop node 4, 5, and 7 testing (keeps 6 and 8)
+* Update oose-sdk
+* Adjust calls to match oose-sdk changes
+
 ### 2.0.0
 * Change to operate Couchdb rather than the Shredder master
 * Update dependencies and test across Node 4,5,6,7,8
