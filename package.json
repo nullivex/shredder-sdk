@@ -2,13 +2,12 @@
   "author": "NULLIVEX LLC <developers@nullivex.com>",
   "name": "shredder-sdk",
   "description": "Shredder development kit complete with mock server",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "homepage": "https://www.nullivex.com/",
   "repository": {
     "type": "git",
     "url": "https://github.com/nullivex/shredder-sdk.git"
   },
-  "main": "app.js",
   "keywords": [
     "shredder",
     "cloud compute",
@@ -20,16 +19,16 @@
     "node": ">=4"
   },
   "dependencies": {
-    "bluebird": "^3.5.0",
-    "body-parser": "^1.17.2",
-    "commander": "^2.11.0",
-    "debug": "^3.0.1",
-    "express": "^4.15.4",
-    "graceful-fs": "^4.1.11",
-    "nano": "^6.4.0",
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.19.0",
+    "commander": "^8.0.0",
+    "debug": "^4.3.2",
+    "express": "^4.17.1",
+    "graceful-fs": "^4.2.6",
+    "nano": "^9.0.3",
     "node-password": "^1.0.2",
-    "object-manage": "^1.0.0",
-    "oose-sdk": "^2.2.2",
+    "object-manage": "^1.1.1",
+    "oose-sdk": "^3.1.2",
     "request": "^2.81.0",
     "request-promise": "^4.2.1"
   },
@@ -41,7 +40,7 @@
     "test": "node ./node_modules/mocha/bin/mocha ./test/*.test.js"
   },
   "devDependencies": {
-    "chai": "4.1.x",
-    "mocha": "^3.5.0"
+    "chai": "4.3.x",
+    "mocha": "^9.0.2"
   }
 }
